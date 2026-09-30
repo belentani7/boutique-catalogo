@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
     server: {
@@ -19,7 +19,6 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'es2022',
-      minify: 'esbuild',
       cssMinify: true,
       rollupOptions: {
         output: {
