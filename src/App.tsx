@@ -25,7 +25,6 @@ const IMAGES: ImageItem[] = [
 
 function App() {
   const [loaded, setLoaded] = useState<Set<number>>(new Set());
-  const [visible, setVisible] = useState<Set<number>>(new Set());
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
@@ -95,14 +94,6 @@ function App() {
     setLoaded(prev => new Set(prev).add(id));
   };
 
-  const handleIntersection = (entries: IntersectionObserverEntry[]) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        setVisible(prev => new Set(prev).add(Number(entry.target.dataset.id)));
-      }
-    });
-  };
-
   return (
     <div ref={scrollRef} className="min-h-screen bg-black overflow-x-hidden">
       {/* Hero / Entrada */}
@@ -130,19 +121,9 @@ function App() {
       <section ref={scrollRef} className="relative pb-20 lg:pb-32">
         <div className="catalog-grid max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-            {IMAGES.map((item, index) => (
+            {IMAGES.map((item) => (
               <article
                 key={item.id}
-                ref={(el) => {
-                  if (el) {
-                    const observer = new IntersectionObserver(handleIntersection, {
-                      threshold: 0.15,
-                      rootMargin: '50px'
-                    });
-                    observer.observe(el);
-                    return () => observer.disconnect();
-                  }
-                }}
                 data-id={item.id}
                 className="catalog-item group relative aspect-[3/4] overflow-hidden bg-gray-950 cursor-pointer"
                 style={{ transformOrigin: 'center center' }}
@@ -151,7 +132,7 @@ function App() {
                   {item.isVideo ? (
                     <video
                       src={item.src}
-                      alt={item.alt}
+                      aria-label={item.alt}
                       className={`w-full h-full object-cover transition-all duration-1000 ease-out ${
                         loaded.has(item.id) ? 'opacity-100 scale-100 filter grayscale-[15%] contrast-110' : 'opacity-0 scale-[1.08] filter grayscale-[20%]'
                       }`}
