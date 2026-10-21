@@ -25,13 +25,13 @@ const IMAGES: ImageItem[] = [
 
 function App() {
   const [loaded, setLoaded] = useState<Set<number>>(new Set());
-  const [visible, setVisible] = useState<Set<number>>(new Set());
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const ctx = gsap.context(() => {
       // Hero entrance
       gsap.fromTo(heroRef.current, 
@@ -95,13 +95,6 @@ function App() {
     setLoaded(prev => new Set(prev).add(id));
   };
 
-  const handleIntersection = (entries: IntersectionObserverEntry[]) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        setVisible(prev => new Set(prev).add(Number(entry.target.dataset.id)));
-      }
-    });
-  };
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-black overflow-x-hidden">
@@ -127,31 +120,23 @@ function App() {
       </section>
 
       {/* Catálogo */}
-      <section ref={scrollRef} className="relative pb-20 lg:pb-32">
+      <section className="relative pb-20 lg:pb-32">
         <div className="catalog-grid max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {IMAGES.map((item, index) => (
               <article
                 key={item.id}
-                ref={(el) => {
-                  if (el) {
-                    const observer = new IntersectionObserver(handleIntersection, {
-                      threshold: 0.15,
-                      rootMargin: '50px'
-                    });
-                    observer.observe(el);
-                    return () => observer.disconnect();
-                  }
-                }}
+                tabIndex={0}
+                aria-label={`${item.collection}: ${item.caption}`}
                 data-id={item.id}
-                className="catalog-item group relative aspect-[3/4] overflow-hidden bg-gray-950 cursor-pointer"
+                className="catalog-item group relative aspect-[3/4] overflow-hidden bg-gray-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                 style={{ transformOrigin: 'center center' }}
               >
                 <div className="absolute inset-0 z-10">
                   {item.isVideo ? (
                     <video
                       src={item.src}
-                      alt={item.alt}
+                      aria-label={item.alt}
                       className={`w-full h-full object-cover transition-all duration-1000 ease-out ${
                         loaded.has(item.id) ? 'opacity-100 scale-100 filter grayscale-[15%] contrast-110' : 'opacity-0 scale-[1.08] filter grayscale-[20%]'
                       }`}
@@ -175,10 +160,10 @@ function App() {
                 </div>
 
                 {/* Overlay sutil */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out z-20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus:opacity-100 transition-opacity duration-700 ease-out z-20" />
 
                 {/* Caption - solo aparece en hover/tap */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-30">
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 transform translate-y-0 sm:translate-y-full sm:group-hover:translate-y-0 sm:group-focus:translate-y-0 transition-transform duration-500 ease-out z-30">
                   <div className="max-w-md mx-auto text-center">
                     <span className="font-mono text-gray-500 text-xs tracking-[0.4em] uppercase block mb-2">
                       {item.collection}
@@ -190,7 +175,7 @@ function App() {
                 </div>
 
                 {/* Number indicator */}
-                <div className="absolute top-3 left-3 font-mono text-gray-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-30">
+                <div className="absolute top-3 left-3 font-mono text-gray-500 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus:opacity-100 transition-opacity duration-500 z-30">
                   {String(item.id).padStart(2, '0')}
                 </div>
               </article>
@@ -204,7 +189,7 @@ function App() {
             Hecho en Barcelona
           </p>
           <p className="font-display text-gray-300 text-sm font-light tracking-wide">
-            Piezas únicas · Cita previa · WhatsApp +34 600 000 000
+            Piezas seleccionadas · Edición editorial · Barcelona
           </p>
         </div>
       </section>
