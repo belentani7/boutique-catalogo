@@ -8,8 +8,11 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 jobs:
   # === Code Quality ===
@@ -79,14 +82,17 @@ jobs:
       - name: Run npm audit
         run: |
           npm ci
-          npm audit --level=high || true
+          npm audit --audit-level=high
 
   # === Docker ===
   docker:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: [build, security]
-    if: github.event_name == 'push' || github.event_name == 'release'
+    if: ${{ (github.event_name == 'push' || github.event_name == 'release') && vars.BOUTIQUE_ENABLE_IMAGE_PUSH == 'true' }}
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -129,7 +135,7 @@ jobs:
     name: Deploy Preview
     runs-on: ubuntu-latest
     needs: [build, security]
-    if: github.event_name == 'pull_request'
+    if: ${{ github.event_name == 'pull_request' && vars.BOUTIQUE_ENABLE_PREVIEW == 'true' }}
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -150,8 +156,8 @@ jobs:
   deploy-production:
     name: Deploy Production
     runs-on: ubuntu-latest
-    needs: [build, security, docker]
-    if: github.event_name == 'release'
+    needs: [build, security]
+    if: ${{ github.event_name == 'release' && vars.BOUTIQUE_ENABLE_PRODUCTION == 'true' }}
     environment: production
     steps:
       - name: Download build artifacts
@@ -181,7 +187,7 @@ jobs:
           if [[ "${{ needs.lint.result }}" == "success" && \
                 "${{ needs.build.result }}" == "success" && \
                 "${{ needs.security.result }}" == "success" && \
-                "${{ needs.docker.result }}" == "success" ]]; then
+                ( "${{ needs.docker.result }}" == "success" || "${{ needs.docker.result }}" == "skipped" ) ]]; then
             echo "✅ All checks passed!"
           else
             echo "❌ Some checks failed!"
