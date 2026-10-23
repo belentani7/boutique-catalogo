@@ -6,6 +6,8 @@ Catálogo editorial de moda con dirección de arte monocromática, tipografía C
 
 - Portada de marca con una identidad negro / gris / blanco y navegación visual basada en scroll.
 - Galería responsive de cinco looks editoriales y una pieza de vídeo.
+- Búsqueda local de prendas y selector de colección, con resultados anunciados a lectores de pantalla y estado vacío.
+- Vídeo con reproducción voluntaria y controles, y mensaje de error si falla una imagen o vídeo.
 - Fichas con colección, título y número; información accesible en pantallas táctiles, ratón y teclado.
 - Animaciones progresivas con GSAP y respeto a `prefers-reduced-motion`.
 - Metadatos iniciales, título, idioma español y estructura semántica.
@@ -25,6 +27,7 @@ npm run dev
 npm run typecheck
 npm run lint
 npm run build
+node --experimental-strip-types --test tests/catalog-filter.test.mjs
 ```
 
 La rama de release incluye un flujo de GitHub Actions para estos tres controles. **No se debe publicar una versión con un control fallido.**
@@ -47,3 +50,11 @@ Puede publicarse como sitio estático en Vercel: framework Vite, `npm run build`
 ## Preservación
 
 La rama de mejora no retira componentes visuales, productos, animaciones, medios ni funcionalidad existente. Cualquier nueva sección comercial requiere catálogo real, precios, políticas y contacto autorizado.
+
+## Publicación bajo control
+
+La rama de mejora exige variables de repositorio explícitas para habilitar publicación desde GitHub Actions: `BOUTIQUE_ENABLE_PREVIEW`, `BOUTIQUE_ENABLE_PRODUCTION` y `BOUTIQUE_ENABLE_IMAGE_PUSH` deben establecerse en `true` por separado. Por defecto, las tareas de publicación no se ejecutan. Una variable habilitada no sustituye las pruebas, revisión de derechos de imágenes/vídeo, protección del destino ni verificación de coste cero. El sitio sigue siendo privado y no se ha autorizado publicar material de terceros.
+
+## Comprobaciones pendientes
+
+No se ha verificado en esta rama una copia offsite cifrada/restaurada, ni derechos de cada fotografía/vídeo, ni un destino Vercel conectado. No considerar el PR publicado ni plenamente validado hasta ejecutar `npm ci`, lint, typecheck, build, pruebas de navegador 320/375/768/1280px y CI con runner.
