@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/all';
 import './index.css';
+import { filterCatalog } from './catalog-filter';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,10 +22,16 @@ const IMAGES: ImageItem[] = [
   { id: 4, src: '/media/look4.jpg', alt: 'Look 4', caption: 'Blazer lana técnica', collection: 'SS25' },
   { id: 5, src: '/media/look5.png', alt: 'Look 5', caption: 'Camisa algodón orgánico', collection: 'SS25' },
   { id: 6, src: '/media/hero.mp4', alt: 'Hero Video', caption: 'Video campaña', collection: 'HERO', isVideo: true },
-];
+]; 
+
+const COLLECTIONS = ['TODAS', ...new Set(IMAGES.map((item) => item.collection))];
 
 function App() {
   const [loaded, setLoaded] = useState<Set<number>>(new Set());
+  const [failed, setFailed] = useState<Set<number>>(new Set());
+  const [query, setQuery] = useState('');
+  const [collection, setCollection] = useState('TODAS');
+  const filteredImages = filterCatalog(IMAGES, query, collection);
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
@@ -55,6 +62,14 @@ function App() {
         { opacity: 0.4, y: 0, duration: 1, ease: 'power2.out', delay: 1.2, repeat: -1, yoyo: true }
       );
 
+    }, scrollRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ctx = gsap.context(() => {
       // Images scroll reveal
       const images = document.querySelectorAll('.catalog-item');
       images.forEach((el, i) => {
@@ -76,7 +91,7 @@ function App() {
       });
 
       // Subtle parallax on scroll
-      gsap.to('.catalog-grid', {
+      if (filteredImages.length > 0) gsap.to('.catalog-grid', {
         yPercent: -5,
         ease: 'none',
         scrollTrigger: {
@@ -87,17 +102,21 @@ function App() {
         }
       });
     }, scrollRef);
-
     return () => ctx.revert();
-  }, []);
+  }, [query, collection]);
 
   const handleImageLoad = (id: number) => {
     setLoaded(prev => new Set(prev).add(id));
   };
 
+  const handleMediaError = (id: number) => {
+    setFailed(prev => new Set(prev).add(id));
+  };
+
 
   return (
     <div ref={scrollRef} className="min-h-screen bg-black overflow-x-hidden">
+      <a href="#catalogo" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:bg-white focus:text-black focus:p-3">Saltar al catálogo</a>
       {/* Hero / Entrada */}
       <section ref={heroRef} className="relative min-h-screen flex flex-col justify-center items-center px-4 sm:px-6 lg:px-12">
         <div className="w-full max-w-4xl mx-auto text-center">
@@ -120,10 +139,34 @@ function App() {
       </section>
 
       {/* Catálogo */}
-      <section className="relative pb-20 lg:pb-32">
+      <section id="catalogo" aria-labelledby="catalog-heading" className="relative pb-20 lg:pb-32">
         <div className="catalog-grid max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 sm:mb-12">
+            <h2 id="catalog-heading" className="font-display text-3xl sm:text-4xl text-white mb-5">Explorar colección</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="catalog-search" className="block text-gray-200 text-sm mb-2">Buscar prendas</label>
+                <input id="catalog-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => { if (event.key === 'Escape') setQuery(''); }}
+                  placeholder="Abrigo, vestido, algodón…" autoComplete="off"
+                  className="w-full min-h-12 rounded-sm border border-gray-600 bg-gray-900 px-4 text-white placeholder:text-gray-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />
+              </div>
+              <div>
+                <label htmlFor="catalog-collection" className="block text-gray-200 text-sm mb-2">Colección</label>
+                <select id="catalog-collection" value={collection} onChange={(event) => setCollection(event.target.value)}
+                  className="w-full min-h-12 rounded-sm border border-gray-600 bg-gray-900 px-4 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                  {COLLECTIONS.map((option) => <option key={option} value={option}>{option === 'TODAS' ? 'Todas las colecciones' : option}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p role="status" aria-live="polite" className="text-gray-200 text-sm">{filteredImages.length} de {IMAGES.length} piezas</p>
+              {(query || collection !== 'TODAS') && <button type="button" onClick={() => { setQuery(''); setCollection('TODAS'); }}
+                className="min-h-11 px-4 border border-gray-500 text-white hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Limpiar filtros</button>}
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-            {IMAGES.map((item, index) => (
+            {filteredImages.map((item) => (
               <article
                 key={item.id}
                 tabIndex={0}
@@ -133,28 +176,32 @@ function App() {
                 style={{ transformOrigin: 'center center' }}
               >
                 <div className="absolute inset-0 z-10">
-                  {item.isVideo ? (
+                  {failed.has(item.id) ? (
+                    <div role="status" className="flex h-full items-center justify-center bg-gray-900 px-4 text-center text-gray-200">Vista previa no disponible</div>
+                  ) : item.isVideo ? (
                     <video
                       src={item.src}
-                      aria-label={item.alt}
+                      aria-label={`${item.caption}, colección ${item.collection}`}
                       className={`w-full h-full object-cover transition-all duration-1000 ease-out ${
                         loaded.has(item.id) ? 'opacity-100 scale-100 filter grayscale-[15%] contrast-110' : 'opacity-0 scale-[1.08] filter grayscale-[20%]'
                       }`}
-                      autoPlay
+                      controls
+                      preload="metadata"
                       muted
-                      loop
                       playsInline
                       onLoadedData={() => handleImageLoad(item.id)}
+                      onError={() => handleMediaError(item.id)}
                     />
                   ) : (
                     <img
                       src={item.src}
-                      alt={item.alt}
+                      alt={`${item.caption}, colección ${item.collection}`}
                       loading="lazy"
                       className={`w-full h-full object-cover transition-all duration-1000 ease-out ${
                         loaded.has(item.id) ? 'opacity-100 scale-100 filter grayscale-[15%] contrast-110' : 'opacity-0 scale-[1.08] filter grayscale-[20%]'
                       }`}
                       onLoad={() => handleImageLoad(item.id)}
+                      onError={() => handleMediaError(item.id)}
                     />
                   )}
                 </div>
@@ -181,15 +228,16 @@ function App() {
               </article>
             ))}
           </div>
+          {filteredImages.length === 0 && <p className="py-16 text-center text-gray-200" role="status">No hay piezas que coincidan con los filtros. Prueba otra búsqueda.</p>}
         </div>
 
         {/* Footer sutil */}
         <div className="mt-16 lg:mt-24 text-center">
           <p className="font-mono text-gray-500 text-xs tracking-[0.4em] uppercase mb-3">
-            Hecho en Barcelona
+            Selección editorial
           </p>
           <p className="font-display text-gray-300 text-sm font-light tracking-wide">
-            Piezas seleccionadas · Edición editorial · Barcelona
+            Piezas seleccionadas · Edición editorial
           </p>
         </div>
       </section>
