@@ -53,7 +53,7 @@ La rama de mejora no retira componentes visuales, productos, animaciones, medios
 
 ## Publicación bajo control
 
-La rama de mejora exige variables de repositorio explícitas para habilitar publicación desde GitHub Actions: `BOUTIQUE_ENABLE_PREVIEW`, `BOUTIQUE_ENABLE_PRODUCTION` y `BOUTIQUE_ENABLE_IMAGE_PUSH` deben establecerse en `true` por separado. Por defecto, las tareas de publicación no se ejecutan. Una variable habilitada no sustituye las pruebas, revisión de derechos de imágenes/vídeo, protección del destino ni verificación de coste cero. El sitio sigue siendo privado y no se ha autorizado publicar material de terceros.
+La rama de mejora exige variables de repositorio explícitas para habilitar publicación desde GitHub Actions: `BOUTIQUE_ENABLE_PREVIEW`, `BOUTIQUE_ENABLE_PRODUCTION` y `BOUTIQUE_ENABLE_IMAGE_PUSH` deben establecerse en `true` por separado. Por defecto, las tareas de publicación no se ejecutan. Una variable habilitada no sustituye las pruebas, revisión de derechos de imágenes/vídeo, protección del destino ni verificación de coste cero. **Visibilidad verificada el 27-10-2026:** el repositorio de GitHub es **público**, aunque no se ha verificado un despliegue funcional. La presencia de imágenes y vídeo en GitHub no acredita sus derechos de difusión. No activar despliegues ni redistribuir medios hasta comprobar derechos y destino; no cambiar la visibilidad del repositorio sin autorización.
 
 ## Comprobaciones pendientes
 

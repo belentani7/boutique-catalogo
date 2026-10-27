@@ -6,7 +6,7 @@ export interface CatalogEntry {
 }
 
 export function normalizeCatalogText(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim().replace(/\s+/g, ' ');
 }
 
 export function filterCatalog<T extends CatalogEntry>(
@@ -14,11 +14,11 @@ export function filterCatalog<T extends CatalogEntry>(
   query: string,
   collection: string,
 ): T[] {
-  const normalizedQuery = normalizeCatalogText(query);
+  const terms = normalizeCatalogText(query).split(' ').filter(Boolean);
   return items.filter((item) => {
     if (collection !== 'TODAS' && item.collection !== collection) return false;
-    if (!normalizedQuery) return true;
-    return [item.caption, item.collection, item.alt]
-      .some((field) => normalizeCatalogText(field).includes(normalizedQuery));
+    if (terms.length === 0) return true;
+    const searchable = normalizeCatalogText([item.caption, item.collection, item.alt].join(' '));
+    return terms.every((term) => searchable.includes(term));
   });
 }

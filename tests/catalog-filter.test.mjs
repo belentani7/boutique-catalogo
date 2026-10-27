@@ -25,3 +25,19 @@ test('blank query retains original order and never mutates data', () => {
   assert.deepEqual(filterCatalog(items, ' ', 'TODAS'), items);
   assert.equal(JSON.stringify(items), before);
 });
+
+test('search tolerates multiple spaces and tabs within a garment name', () => {
+  assert.equal(normalizeCatalogText('  VESTIDO  \t ALGODÓN   '), 'vestido algodon');
+  assert.deepEqual(filterCatalog(items, ' vestido   ALGODON ', 'TODAS').map((item) => item.id), [2]);
+});
+
+test('search matches terms across garment and collection in either order', () => {
+  assert.deepEqual(filterCatalog(items, 'SS25 vestido', 'TODAS').map((item) => item.id), [2]);
+  assert.deepEqual(filterCatalog(items, 'técnica ss25', 'TODAS').map((item) => item.id), [3]);
+  assert.deepEqual(filterCatalog(items, 'AW24 vestido', 'TODAS'), []);
+});
+
+test('all search terms must match; collection selector remains restrictive', () => {
+  assert.deepEqual(filterCatalog(items, 'algodon inexistente', 'TODAS'), []);
+  assert.deepEqual(filterCatalog(items, 'ss25 vestido', 'AW24'), []);
+});
