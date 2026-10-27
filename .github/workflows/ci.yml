@@ -74,6 +74,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Gitleaks PR range requires the base parent history
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
@@ -81,6 +83,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run npm audit
+        if: always() # report dependency findings even if Gitleaks fails
         run: |
           npm ci
           npm audit --audit-level=high
