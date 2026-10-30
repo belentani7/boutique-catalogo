@@ -8,9 +8,6 @@ permissions:
   contents: read
 
 jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
   analyze:
     runs-on: ubuntu-latest
     permissions:
@@ -20,5 +17,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3
         with:
-          languages: javascript
+          # El código del repo es TypeScript: javascript-typescript cubre JS + TS.
+          languages: javascript-typescript
       - uses: github/codeql-action/analyze@v3
